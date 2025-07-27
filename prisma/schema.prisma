@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(USER)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Goat {
+  id             Int      @id @default(autoincrement()) @map("id")
+
+  codeName       String   @unique @map("code_name")               // Kode/Nama Kambing
+  breederName    String?  @map("breeder_name")                    // Nama Breeder
+  gender         Gender                                           // Jenis kelamin kambing
+  breedLine      String?  @map("breed_line")                      // Galur/Ras
+  
+  healthStatus   String?  @map("health_status")                   // Kondisi Kesehatan Terkini
+  goatType       String?  @map("goat_type")                       // Jenis Kambing
+
+  currentWeight  Float?   @map("current_weight")                  // Bobot Terkini
+  weightDate     DateTime?@map("weight_date")                     // Tanggal Timbang Terkini
+  grade          String?  @map("grade")                           // Grade
+  color          String?  @map("color")                           // Warna
+  sireBreed      String?  @map("sire_breed")                      // Ras Pejantan
+  damBreed       String?  @map("dam_breed")                       // Ras Induk
+  birthType      String?  @map("birth_type")                      // Tipe Kelahiran (tungga;)
+  birthWeight    Float?   @map("birth_weight")                    // Bobot Lahir
+  birthDate      DateTime?@map("birth_date")                      // Tanggal Lahir
+  releaseDate    DateTime?@map("release_date")                    // Tanggal Pelepasan
+
+  salesNotes     String?  @db.Text @map("sales_notes")            // Catatan Penjualan
+
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt     @map("updated_at")
+  deletedAt      DateTime?               @map("deleted_at")
+}
+
+enum Gender {
+  Male
+  Female
+}
+
+model TokenBlacklist {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  expiredAt DateTime @map("expired_at")
+}
