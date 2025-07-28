@@ -1,0 +1,755 @@
+openapi: 3.0.3
+info:
+  title: Bima Raman Farm Backend API
+  version: 1.0.0
+  description: |
+    REST API untuk manajemen user dan data kambing pada sistem Bima Raman Farm.
+    Dibangun dengan Express.js dan Prisma ORM.
+servers:
+  - url: http://localhost:3000/api
+tags:
+  - name: Auth
+    description: Endpoint autentikasi dan manajemen user
+  - name: Goat
+    description: Endpoint manajemen data kambing
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Registrasi user baru
+      description: Membuat akun user baru.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registrasi berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+              examples:
+                success:
+                  value:
+                    status: success
+                    message: Registrasi berhasil
+                    data:
+                      id: 1
+                      username: user1
+                      email: user1@email.com
+                      name: User Satu
+        '409':
+          description: Email atau username sudah digunakan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                conflict:
+                  value:
+                    status: error
+                    message: Email atau username sudah digunakan
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login user
+      description: Login menggunakan username/email dan password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                success:
+                  value:
+                    status: success
+                    message: Login berhasil
+                    data:
+                      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      user:
+                        id: 1
+                        username: user1
+                        email: user1@email.com
+                        role: USER
+        '401':
+          description: Email/username atau password salah
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  value:
+                    status: error
+                    message: Email/username atau password salah
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout user
+      description: Logout dan blacklist token JWT.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                success:
+                  value:
+                    status: success
+                    message: Logout berhasil
+        '400':
+          description: Token tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                fail:
+                  value:
+                    status: fail
+                    message: Token tidak ditemukan
+
+  /auth/change-password:
+    post:
+      tags: [Auth]
+      summary: Ganti password user
+      description: Ganti password dengan memasukkan password lama, password baru, dan konfirmasi password baru. Hanya untuk user yang sudah login.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password berhasil diganti
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                success:
+                  value:
+                    status: success
+                    message: Password berhasil diganti
+        '400':
+          description: Password lama salah atau validasi gagal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                fail:
+                  value:
+                    status: error
+                    message: Password lama salah
+
+  /goat:
+    post:
+      tags: [Goat]
+      summary: Tambah data kambing
+      description: Menambahkan data kambing baru.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoatCreateRequest'
+      responses:
+        '201':
+          description: Kambing berhasil ditambahkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoatResponse'
+              examples:
+                success:
+                  value:
+                    status: success
+                    message: Kambing berhasil ditambahkan
+                    data:
+                      id: 1
+                      codeName: KMB001
+                      breederName: Pak Budi
+                      gender: Male
+                      breedLine: Etawa
+        '400':
+          description: Validasi gagal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              examples:
+                fail:
+                  value:
+                    status: fail
+                    message: Validation error
+                    details:
+                      - Kode/Nama kambing wajib diisi
+
+    get:
+      tags: [Goat]
+      summary: Ambil semua data kambing (dengan filter, search, dan pagination)
+      description: Mendapatkan daftar kambing dengan filter, pencarian, dan pagination.
+      parameters:
+        - name: page
+          in: query
+          description: Halaman data
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Jumlah data per halaman
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: search
+          in: query
+          description: Kata kunci pencarian (codeName, breederName, breedLine)
+          required: false
+          schema:
+            type: string
+        - name: gender
+          in: query
+          description: Filter jenis kelamin kambing
+          required: false
+          schema:
+            type: string
+            enum: [Male, Female]
+        - name: breedLine
+          in: query
+          description: Filter galur/ras kambing
+          required: false
+          schema:
+            type: string
+        - name: goatType
+          in: query
+          description: Filter jenis kambing
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Data kambing berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoatPaginatedResponse'
+              examples:
+                success:
+                  value:
+                    status: success
+                    message: Data kambing berhasil diambil
+                    data:
+                      - id: 1
+                        codeName: KMB001
+                        breederName: Pak Budi
+                        gender: Male
+                        breedLine: Etawa
+                    meta:
+                      page: 1
+                      limit: 10
+                      total: 1
+                      totalPages: 1
+
+  /goat/{id}:
+    get:
+      tags: [Goat]
+      summary: Ambil detail kambing
+      description: Mendapatkan detail data kambing berdasarkan ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detail kambing berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoatResponse'
+              examples:
+                success:
+                  value:
+                    status: success
+                    message: Detail kambing berhasil diambil
+                    data:
+                      id: 1
+                      codeName: KMB001
+                      breederName: Pak Budi
+                      gender: Male
+                      breedLine: Etawa
+        '404':
+          description: Data kambing tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    status: error
+                    message: Data kambing tidak ditemukan
+
+    put:
+      tags: [Goat]
+      summary: Update data kambing
+      description: Memperbarui data kambing berdasarkan ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoatUpdateRequest'
+      responses:
+        '200':
+          description: Data kambing berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoatResponse'
+              examples:
+                success:
+                  value:
+                    status: success
+                    message: Data kambing berhasil diperbarui
+                    data:
+                      id: 1
+                      codeName: KMB001
+                      breederName: Pak Budi
+                      gender: Male
+                      breedLine: Etawa
+        '404':
+          description: Data kambing tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    status: error
+                    message: Data kambing tidak ditemukan
+
+    delete:
+      tags: [Goat]
+      summary: Hapus data kambing
+      description: Menghapus data kambing berdasarkan ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Data kambing berhasil dihapus
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                success:
+                  value:
+                    status: success
+                    message: Data kambing berhasil dihapus
+        '404':
+          description: Data kambing tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    status: error
+                    message: Data kambing tidak ditemukan
+
+  /goat/{id}/qrcode:
+    get:
+      tags: [Goat]
+      summary: Generate QR code untuk kambing
+      description: Menghasilkan QR code (base64) berisi link menuju antarmuka frontend detail kambing.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: QR code berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoatQRCodeResponse'
+              examples:
+                success:
+                  value:
+                    status: success
+                    message: QR code berhasil dibuat
+                    data:
+                      id: 1
+                      qrCode: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...'
+                      link: 'https://myfrontend.com/goats/1'
+        '404':
+          description: Data kambing tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    status: error
+                    message: Data kambing tidak ditemukan
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        password:
+          type: string
+          format: password
+      required: [username, email, name, password]
+
+    RegisterResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Registrasi berhasil
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+            username:
+              type: string
+            email:
+              type: string
+            name:
+              type: string
+
+    LoginRequest:
+      type: object
+      properties:
+        identifier:
+          type: string
+          description: Username atau email
+        password:
+          type: string
+          format: password
+      required: [identifier, password]
+
+    LoginResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+            user:
+              type: object
+              properties:
+                id:
+                  type: integer
+                username:
+                  type: string
+                email:
+                  type: string
+                role:
+                  type: string
+                  enum: [USER, ADMIN]
+
+    ChangePasswordRequest:
+      type: object
+      properties:
+        oldPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+        confirmNewPassword:
+          type: string
+          format: password
+      required: [oldPassword, newPassword, confirmNewPassword]
+
+    SuccessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Operasi berhasil
+        data:
+          type: object
+          example: {}
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        message:
+          type: string
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: fail
+        message:
+          type: string
+          example: Validation error
+        details:
+          type: array
+          items:
+            type: string
+
+    GoatCreateRequest:
+      type: object
+      properties:
+        codeName:
+          type: string
+        breederName:
+          type: string
+          nullable: true
+        gender:
+          type: string
+          enum: [Male, Female]
+        breedLine:
+          type: string
+          nullable: true
+        healthStatus:
+          type: string
+          nullable: true
+        goatType:
+          type: string
+          nullable: true
+        currentWeight:
+          type: number
+          format: float
+          nullable: true
+        weightDate:
+          type: string
+          format: date-time
+          nullable: true
+        grade:
+          type: string
+          nullable: true
+        color:
+          type: string
+          nullable: true
+        sireBreed:
+          type: string
+          nullable: true
+        damBreed:
+          type: string
+          nullable: true
+        birthType:
+          type: string
+          nullable: true
+        birthWeight:
+          type: number
+          format: float
+          nullable: true
+        birthDate:
+          type: string
+          format: date-time
+          nullable: true
+        releaseDate:
+          type: string
+          format: date-time
+          nullable: true
+        salesNotes:
+          type: string
+          nullable: true
+      required: [codeName, gender]
+
+    GoatUpdateRequest:
+      allOf:
+        - $ref: '#/components/schemas/GoatCreateRequest'
+      required: []
+
+    GoatResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Goat'
+
+    GoatPaginatedResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Goat'
+        meta:
+          type: object
+          properties:
+            page:
+              type: integer
+            limit:
+              type: integer
+            total:
+              type: integer
+            totalPages:
+              type: integer
+
+    GoatQRCodeResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+            qrCode:
+              type: string
+              description: QR code dalam format base64
+            link:
+              type: string
+              description: Link menuju frontend
+
+    Goat:
+      type: object
+      properties:
+        id:
+          type: integer
+        codeName:
+          type: string
+        breederName:
+          type: string
+          nullable: true
+        gender:
+          type: string
+          enum: [Male, Female]
+        breedLine:
+          type: string
+          nullable: true
+        healthStatus:
+          type: string
+          nullable: true
+        goatType:
+          type: string
+          nullable: true
+        currentWeight:
+          type: number
+          format: float
+          nullable: true
+        weightDate:
+          type: string
+          format: date-time
+          nullable: true
+        grade:
+          type: string
+          nullable: true
+        color:
+          type: string
+          nullable: true
+        sireBreed:
+          type: string
+          nullable: true
+        damBreed:
+          type: string
+          nullable: true
+        birthType:
+          type: string
+          nullable: true
+        birthWeight:
+          type: number
+          format: float
+          nullable: true
+        birthDate:
+          type: string
+          format: date-time
+          nullable: true
+        releaseDate:
+          type: string
+          format: date-time
+          nullable: true
+        salesNotes:
+          type: string
+          nullable: true
