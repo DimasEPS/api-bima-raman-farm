@@ -64,3 +64,17 @@ export const deleteGoat = async (req, res, next) => {
     next(err);
   }
 };
+
+export const generateGoatQRCode = async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const qrData = await goatService.generateGoatQRCode(id);
+    return res.status(200).json({
+      status: 'success',
+      message: 'QR code berhasil dibuat',
+      data: qrData,
+    });
+  } catch (err) {
+    next(err);
+  }
+};

@@ -10,5 +10,6 @@ router.get('/', goatController.getAllGoats);
 router.get('/:id', goatController.getGoatDetail);
 router.put('/:id', validate(updateGoatSchema), goatController.updateGoat);
 router.delete('/:id', goatController.deleteGoat);
+router.get('/:id/qrcode', goatController.generateGoatQRCode);
 
 export default router;

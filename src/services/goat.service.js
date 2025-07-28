@@ -1,5 +1,6 @@
 import { ApiError } from '../utils/apiError.util.js';
 import * as goatRepo from '../repositories/goat.repository.js';
+import QRCode from 'qrcode';
 
 export const createGoat = async (data) => {
   return goatRepo.createGoat(data);
@@ -27,4 +28,18 @@ export const deleteGoat = async (id) => {
   const goat = await goatRepo.getGoatById(id);
   if (!goat) throw new ApiError(404, 'Data kambing tidak ditemukan');
   return goatRepo.deleteGoat(id);
+};
+
+export const generateGoatQRCode = async (id) => {
+  const goat = await goatRepo.getGoatById(id);
+  if (!goat) throw new ApiError(404, 'Data kambing tidak ditemukan');
+
+  const frontendUrl = `${process.env.URL_FE}${id}`;
+  const qrBase64 = await QRCode.toDataURL(frontendUrl);
+
+  return {
+    id,
+    qrCode: qrBase64,
+    link: frontendUrl,
+  };
 };
