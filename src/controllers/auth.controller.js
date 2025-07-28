@@ -49,3 +49,14 @@ export const logout = async (req, res, next) => {
     next(err);
   }
 };
+
+export const changePassword = async (req, res, next) => {
+  try {
+    const userId = Number(req.user.id);
+    const { oldPassword, newPassword } = req.body;
+    await authService.changePassword(userId, oldPassword, newPassword);
+    return successResponse(res, 200, 'Password berhasil diganti');
+  } catch (err) {
+    next(err);
+  }
+};

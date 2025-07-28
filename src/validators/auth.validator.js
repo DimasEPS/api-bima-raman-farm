@@ -35,3 +35,22 @@ export const loginSchema = {
     }),
   }),
 };
+
+export const changePasswordSchema = {
+  body: Joi.object({
+    oldPassword: Joi.string().required().messages({
+      'string.empty': 'Password lama wajib diisi',
+      'any.required': 'Password lama wajib diisi',
+    }),
+    newPassword: Joi.string().min(6).required().messages({
+      'string.min': 'Password baru minimal 6 karakter',
+      'string.empty': 'Password baru wajib diisi',
+      'any.required': 'Password baru wajib diisi',
+    }),
+    confirmNewPassword: Joi.string().valid(Joi.ref('newPassword')).required().messages({
+      'any.only': 'Konfirmasi password baru tidak sesuai',
+      'string.empty': 'Konfirmasi password baru wajib diisi',
+      'any.required': 'Konfirmasi password baru wajib diisi',
+    }),
+  }),
+};

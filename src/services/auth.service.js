@@ -43,3 +43,14 @@ export const logout = async (token) => {
 
   await authRepo.addTokenToBlacklist(token, new Date(decoded.exp * 1000));
 };
+
+export const changePassword = async (userId, oldPassword, newPassword) => {
+  const user = await authRepo.findUserById(userId);
+  if (!user) throw new ApiError(404, 'User tidak ditemukan');
+
+  const match = await bcrypt.compare(oldPassword, user.password);
+  if (!match) throw new ApiError(400, 'Password lama salah');
+
+  const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+  await authRepo.updateUserPassword(userId, hashedNewPassword);
+};

@@ -34,3 +34,14 @@ export const isTokenBlacklisted = async (token) => {
     where: { token },
   });
 };
+
+export const findUserById = async (id) => {
+  return prisma.users.findUnique({ where: { id } });
+};
+
+export const updateUserPassword = async (id, newPassword) => {
+  return prisma.users.update({
+    where: { id },
+    data: { password: newPassword },
+  });
+};
