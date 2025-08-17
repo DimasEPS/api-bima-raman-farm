@@ -13,7 +13,7 @@ export const createGoat = async (req, res, next) => {
 export const getAllGoats = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 3;
     const search = req.query.search || '';
 
     // Ambil filter dari query string
@@ -38,9 +38,18 @@ export const getAllGoats = async (req, res, next) => {
   }
 };
 
-export const getGoatDetail = async (req, res, next) => {
+export const getGoatDetailById = async (req, res, next) => {
   try {
     const goat = await goatService.getGoatDetail(Number(req.params.id));
+    return successResponse(res, 200, 'Detail kambing berhasil diambil', goat);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getGoatDetail = async (req, res, next) => {
+  try {
+    const goat = await goatService.getGoatDetailByCodeName(req.params.codeName);
     return successResponse(res, 200, 'Detail kambing berhasil diambil', goat);
   } catch (err) {
     next(err);

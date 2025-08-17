@@ -18,6 +18,10 @@ export const getGoatDetail = async (id) => {
   return goat;
 };
 
+export const getGoatDetailByCodeName = async (codeName) => {
+  return await goatRepo.findByCodeName(codeName);
+};
+
 export const updateGoat = async (id, data) => {
   const goat = await goatRepo.getGoatById(id);
   if (!goat) throw new ApiError(404, 'Data kambing tidak ditemukan');

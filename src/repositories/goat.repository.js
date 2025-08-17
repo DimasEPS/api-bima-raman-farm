@@ -43,3 +43,13 @@ export const updateGoat = async (id, data) => {
 export const deleteGoat = async (id) => {
   return prisma.goat.delete({ where: { id } });
 };
+
+export const findByCodeName = async (codeName) => {
+  const goat = await prisma.goat.findUnique({
+    where: { codeName },
+  });
+  if (!goat) {
+    throw new ApiError(404, 'Data kambing tidak ditemukan');
+  }
+  return goat;
+};
