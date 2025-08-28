@@ -39,6 +39,11 @@ model Goat {
   breedLine      String?  @map("breed_line")                      // Galur/Ras
   
   healthStatus   String?  @map("health_status")                   // Kondisi Kesehatan Terkini
+
+  vaccinationDate DateTime? @map("vaccination_date")              // Tanggal Vaksinasi
+  healthNotes    String?  @map("health_notes")                    // Catatan Kesehatan
+  vaccineType    String?  @map("vaccine_type")                    // Jenis Vaksin
+
   goatType       String?  @map("goat_type")                       // Jenis Kambing
 
   currentWeight  Float?   @map("current_weight")                  // Bobot Terkini
@@ -70,3 +75,4 @@ model TokenBlacklist {
   createdAt DateTime @default(now()) @map("created_at")
   expiredAt DateTime @map("expired_at")
 }
+
