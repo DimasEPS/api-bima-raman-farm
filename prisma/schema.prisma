@@ -34,6 +34,7 @@ model Goat {
   id             Int      @id @default(autoincrement()) @map("id")
 
   codeName       String   @unique @map("code_name")               // Kode/Nama Kambing
+  earTagColor    String?  @map("ear_tag_color")                   // Warna ear tag kambing
   breederName    String?  @map("breeder_name")                    // Nama Breeder
   gender         Gender                                           // Jenis kelamin kambing
   breedLine      String?  @map("breed_line")                      // Galur/Ras
