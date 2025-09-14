@@ -7,7 +7,10 @@ import { notFoundHandler, globalErrorHandler } from './middleware/error.middlewa
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [process.env.CORS_ORIGIN || 'https://ramanfarm.com'],
+  credentials: true,
+}));
 app.use(express.json());
 
 // Routes
